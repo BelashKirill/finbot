@@ -1,21 +1,70 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
-import HomeView from "../views/HomeView.vue";
+import MainPage from "@/views/MainPage.vue";
+import LoginPage from "@/views/LoginPage.vue";
+import AllPaysPage from "@/views/AllPaysPage.vue";
+import ToDoPays from "@/views/ToDoPays.vue";
+import Properties from "@/views/PropertiesPage.vue";
+
+function isUserLog(to, from, next) {
+  if (
+    document.cookie
+      .split(";")
+      .filter((item) => item.trim().startsWith("token=")).length
+  ) {
+    next();
+    return;
+  } else {
+    router.push({ name: "LoginPage" });
+  }
+}
+
+function logIn() {
+  if (
+    document.cookie
+      .split(";")
+      .filter((item) => item.trim().startsWith("token=")).length
+  ) {
+    router.push({ name: "MainPage" });
+  }
+}
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
-    name: "home",
-    component: HomeView,
+    name: "MainPage",
+    component: MainPage,
+    beforeEnter: isUserLog,
   },
   {
-    path: "/about",
-    name: "about",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
+    path: "/all",
+    name: "AllPaysPage",
+    component: AllPaysPage,
+    beforeEnter: isUserLog,
   },
+  {
+    path: "/properties",
+    name: "PropertiesPage",
+    component: Properties,
+    beforeEnter: isUserLog,
+  },
+  {
+    path: "/todo",
+    name: "ToDoPays",
+    component: ToDoPays,
+    beforeEnter: isUserLog,
+  },
+  {
+    path: "/login",
+    name: "LoginPage",
+    component: LoginPage,
+    beforeEnter: logIn,
+  },
+  // {
+  //   path: "/about",
+  //   name: "about",
+  //   component: () =>
+  //     import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
+  // },
 ];
 
 const router = createRouter({
