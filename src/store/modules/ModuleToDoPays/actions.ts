@@ -42,4 +42,38 @@ export default {
         });
     });
   },
+  async updateToDoPay(context: unknown, data: object) {
+    return new Promise((resolve, reject) => {
+      axios
+        .put(urlServer + "/api/plan/", {
+          user: getCookie("id"),
+          token: getCookie("token"),
+          ...data,
+        })
+        .then((response) => {
+          resolve(response.data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  },
+  async deleteToDoPay(context: unknown, data: object) {
+    return new Promise((resolve, reject) => {
+      axios
+        .delete(urlServer + "/api/plan/", {
+          data: {
+            user: getCookie("id"),
+            token: getCookie("token"),
+            ...data,
+          },
+        })
+        .then((response) => {
+          resolve(response.data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  },
 };

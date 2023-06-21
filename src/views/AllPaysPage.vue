@@ -53,7 +53,9 @@
             >
               <div class="result-filter__left">
                 <div class="result-filter__name">{{ item.product }}</div>
-                <div class="result-filter__date">Дата: {{ item.created }}</div>
+                <div class="result-filter__date">
+                  Дата: {{ formatDate(item.created) }}
+                </div>
                 <div class="result-filter__cat-name">{{ item.category }}</div>
               </div>
               <div class="result-filter__right">
@@ -97,6 +99,7 @@ import dataAllPaysPage from "@/mixins/AllPaysPage/data";
 import { dataInfo } from "@/constants";
 import { useQuasar } from "quasar";
 import { useStore } from "vuex";
+import { formatDate } from "@/heplers";
 
 export default defineComponent({
   components: {
@@ -193,6 +196,7 @@ export default defineComponent({
       resultCount,
       loadResult,
       presetCalendar,
+      formatDate,
     };
   },
 });

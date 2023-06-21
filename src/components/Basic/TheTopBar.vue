@@ -42,10 +42,10 @@ import { getCookie, deleteCookie } from "@/heplers";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 
-document.cookie =
-  "token=ca929d6c25dad85836ae3e003d5b1b1f616a78c46300748f178d981423df1799";
-document.cookie = "name=447530876";
-document.cookie = "id=447530876";
+// document.cookie =
+//   "token=b3e204d87b260accc722f63a813edec4a466e3356a2c21e7f4b7171a75608667";
+// document.cookie = "name=447530876";
+// document.cookie = "id=447530876";
 
 export default defineComponent({
   setup() {

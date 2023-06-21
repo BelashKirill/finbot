@@ -8,7 +8,7 @@
         <q-btn
           color="secondary"
           label="Запланировать покупку"
-          @click="addPays = true"
+          @click="(addPays = true), dropDataWindow()"
         />
       </div>
       <div class="todo-pays">
@@ -19,14 +19,43 @@
             <div class="todo-pays__date">{{ formatDate(item.created) }}</div>
           </div>
           <div class="todo-pays__rigth">
-            <q-icon name="edit" size="22px" color="teal-10" />
-            <q-icon name="delete_outline" color="red-10" size="22px" />
+            <q-icon
+              name="edit"
+              @click="editPay(item.id)"
+              size="22px"
+              color="teal-10"
+            />
+            <q-icon
+              name="delete_outline"
+              @click="(confirmDelete = true), (delItem = item.id)"
+              color="red-10"
+              size="22px"
+            />
           </div>
         </div>
       </div>
     </div>
   </div>
-  <q-dialog v-model.trim="addPays" persistent>
+  <q-dialog v-model="confirmDelete" persistent>
+    <q-card>
+      <q-card-section class="row items-center">
+        <q-avatar icon="delete" color="primary" text-color="white" />
+        <span class="q-ml-sm">Подтвердите удаление покупки</span>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn
+          flat
+          label="Удалить"
+          @click="deletePay(delItem)"
+          color="primary"
+          v-close-popup
+        />
+        <q-btn flat label="Отмена" color="primary" v-close-popup />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+  <q-dialog v-model="addPays" persistent>
     <q-card>
       <q-card-section class="row items-center">
         <span class="title-modal text-bold">Заполните данные о покупке</span>
@@ -67,7 +96,7 @@
       <q-card-actions align="right">
         <q-btn
           flat
-          label="Добавить покупку"
+          :label="typeResponse === 'send' ? 'Добавить покупку' : 'Обновить'"
           color="primary"
           :disable="namePay.length < 3"
           @click="addPay"
@@ -100,11 +129,14 @@ export default defineComponent({
 
     const currentDate = new Date();
     let addPays = ref<boolean>(false);
+    let confirmDelete = ref<boolean>(false);
     let isShowDatePick = ref<boolean>(false);
     let date = ref<string>("");
     let dateInput = ref<string>("");
     let typePay = ref<string>("Другие расходы");
     let namePay = ref<string>("");
+    let delItem = ref<number>(0);
+    let typeResponse = ref<string>("send");
 
     const itemsPays = computed(() => {
       return store.state.listToDo;
@@ -133,35 +165,135 @@ export default defineComponent({
       isShowDatePick.value = false;
     };
 
-    const addPay = () => {
+    const dropDataWindow = () => {
+      namePay.value = "";
+      typePay.value = "Другие расходы";
+
+      date.value = `${currentDate.getFullYear()}-${String(
+        currentDate.getMonth() + 1
+      ).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`;
+
+      dateInput.value = date.value.split("-").reverse().join("-");
+
+      typeResponse.value = "send";
+    };
+
+    const editPay = (id: number) => {
+      addPays.value = true;
+
+      const item = store.state.listToDo.filter((i) => i.id === id);
+
+      namePay.value = item[0].product;
+      typePay.value = item[0].category;
+      date.value = item[0].created;
+      dateInput.value = item[0].created.split("-").reverse().join("-");
+      typeResponse.value = "edit";
+      delItem.value = id;
+    };
+
+    const deletePay = (id: number) => {
       store
-        .dispatch("addNewToDoPay", {
-          plan: namePay.value,
-          category: typePay.value,
-          date: dateInput.value.split("-").reverse().join("-") + "T00:00:00",
-        })
+        .dispatch("deleteToDoPay", { id })
         .then(() => {
           $q.notify({
             type: "positive",
-            caption: `Покупка успешно создана`,
+            caption: `Покупка удалена`,
             message: "OK",
             position: "bottom-right",
           });
 
-          namePay.value = "";
-          typePay.value = "Другие расходы";
+          store.dispatch("getListToDo").catch((err) => {
+            $q.notify({
+              type: "negative",
+              caption: `Ошибка загрузки списка будущих покупок ` + err,
+              message: "Error",
+              position: "bottom-right",
+            });
+          });
         })
         .catch((err) => {
           $q.notify({
             type: "negative",
-            caption: `Ошибка добавления покупки ` + err,
+            caption: `Ошибка удаления покупки ` + err,
             message: "Error",
             position: "bottom-right",
           });
-
-          namePay.value = "";
-          typePay.value = "Другие расходы";
         });
+    };
+
+    const addPay = () => {
+      if (typeResponse.value === "send") {
+        store
+          .dispatch("addNewToDoPay", {
+            plan: namePay.value,
+            category: typePay.value,
+            date: dateInput.value.split("-").reverse().join("-") + "T00:00:00",
+          })
+          .then(() => {
+            $q.notify({
+              type: "positive",
+              caption: `Покупка успешно создана`,
+              message: "OK",
+              position: "bottom-right",
+            });
+
+            namePay.value = "";
+            typePay.value = "Другие расходы";
+
+            store.dispatch("getListToDo").catch((err) => {
+              $q.notify({
+                type: "negative",
+                caption: `Ошибка загрузки списка будущих покупок ` + err,
+                message: "Error",
+                position: "bottom-right",
+              });
+            });
+          })
+          .catch((err) => {
+            $q.notify({
+              type: "negative",
+              caption: `Ошибка добавления покупки ` + err,
+              message: "Error",
+              position: "bottom-right",
+            });
+
+            namePay.value = "";
+            typePay.value = "Другие расходы";
+          });
+      } else {
+        store
+          .dispatch("updateToDoPay", {
+            plan: namePay.value,
+            category: typePay.value,
+            id: delItem.value,
+            date: date.value,
+          })
+          .then(() => {
+            $q.notify({
+              type: "positive",
+              caption: `Покупка успешно обновлена`,
+              message: "OK",
+              position: "bottom-right",
+            });
+
+            store.dispatch("getListToDo").catch((err) => {
+              $q.notify({
+                type: "negative",
+                caption: `Ошибка загрузки списка будущих покупок ` + err,
+                message: "Error",
+                position: "bottom-right",
+              });
+            });
+          })
+          .catch((err) => {
+            $q.notify({
+              type: "negative",
+              caption: `Ошибка загрузки списка будущих покупок ` + err,
+              message: "Error",
+              position: "bottom-right",
+            });
+          });
+      }
     };
 
     onMounted(() => {
@@ -195,6 +327,12 @@ export default defineComponent({
       itemsPays,
       formatDate,
       addPay,
+      confirmDelete,
+      delItem,
+      deletePay,
+      editPay,
+      dropDataWindow,
+      typeResponse,
     };
   },
 });
